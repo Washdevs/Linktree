@@ -33,7 +33,7 @@ export default function LinkList({ links, editingId, onEdit, onMove, onRemove })
                   disabled={index === 0}
                   onClick={() => onMove(link.id, -1)}
                 >
-                  ↑
+                  Up
                 </button>
                 <button
                   type="button"
@@ -41,7 +41,7 @@ export default function LinkList({ links, editingId, onEdit, onMove, onRemove })
                   disabled={index === links.length - 1}
                   onClick={() => onMove(link.id, 1)}
                 >
-                  ↓
+                  Down
                 </button>
                 <button type="button" onClick={() => onEdit(link)}>
                   Editar

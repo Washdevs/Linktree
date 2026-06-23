@@ -44,6 +44,17 @@ function getViewMode() {
   return 'owner';
 }
 
+function getPublicUrl() {
+  const publicPorts = {
+    3000: '3001',
+    5173: '5174',
+    8080: '8081',
+  };
+  const publicPort = publicPorts[window.location.port] || '8081';
+
+  return `${window.location.protocol}//${window.location.hostname}:${publicPort}`;
+}
+
 export default function App() {
   const [profile, setProfile] = useState(createDefaultProfile);
   const [isReady, setIsReady] = useState(false);
@@ -51,6 +62,7 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [formError, setFormError] = useState('');
   const viewMode = useMemo(getViewMode, []);
+  const publicUrl = useMemo(getPublicUrl, []);
   const isOwner = viewMode === 'owner';
 
   useEffect(() => {
@@ -190,7 +202,7 @@ export default function App() {
           </span>
           <h1>Monte sua arvore de links</h1>
         </div>
-        <a className="public-port-link" href="http://localhost:8081" target="_blank" rel="noreferrer">
+        <a className="public-port-link" href={publicUrl} target="_blank" rel="noreferrer">
           <Eye size={18} />
           Ver porta publica
         </a>

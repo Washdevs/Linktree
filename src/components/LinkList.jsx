@@ -1,10 +1,15 @@
+import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
+import IconRenderer from './IconRenderer.jsx';
 import { getNetworkRule } from '../networks/networkRules.js';
 
 export default function LinkList({ links, editingId, onEdit, onMove, onRemove }) {
   return (
     <section className="panel">
       <div className="panel-heading">
-        <h2>Links</h2>
+        <div>
+          <span className="panel-kicker">Ordenacao</span>
+          <h2>Links cadastrados</h2>
+        </div>
         <span className="count">{links.length}</span>
       </div>
 
@@ -19,7 +24,9 @@ export default function LinkList({ links, editingId, onEdit, onMove, onRemove })
               className={`manage-row ${editingId === link.id ? 'is-editing' : ''}`}
               key={link.id}
             >
-              <NetworkAvatar network={network} />
+              <span className="network-avatar" style={{ '--network-color': network.accent }}>
+                <IconRenderer icon={network.Icon} size={20} />
+              </span>
 
               <div className="manage-copy">
                 <strong>{link.label}</strong>
@@ -29,25 +36,33 @@ export default function LinkList({ links, editingId, onEdit, onMove, onRemove })
               <div className="manage-actions" aria-label={`Acoes para ${link.label}`}>
                 <button
                   type="button"
+                  title="Subir"
                   aria-label="Subir"
                   disabled={index === 0}
                   onClick={() => onMove(link.id, -1)}
                 >
-                  Up
+                  <ArrowUp size={16} />
                 </button>
                 <button
                   type="button"
+                  title="Descer"
                   aria-label="Descer"
                   disabled={index === links.length - 1}
                   onClick={() => onMove(link.id, 1)}
                 >
-                  Down
+                  <ArrowDown size={16} />
                 </button>
-                <button type="button" onClick={() => onEdit(link)}>
-                  Editar
+                <button type="button" title="Editar" aria-label="Editar" onClick={() => onEdit(link)}>
+                  <Pencil size={16} />
                 </button>
-                <button className="danger" type="button" onClick={() => onRemove(link.id)}>
-                  Remover
+                <button
+                  className="danger"
+                  type="button"
+                  title="Remover"
+                  aria-label="Remover"
+                  onClick={() => onRemove(link.id)}
+                >
+                  <Trash2 size={16} />
                 </button>
               </div>
             </article>
@@ -55,17 +70,5 @@ export default function LinkList({ links, editingId, onEdit, onMove, onRemove })
         })}
       </div>
     </section>
-  );
-}
-
-function NetworkAvatar({ network }) {
-  if (network.icon) {
-    return <img className="network-avatar" src={network.icon} alt="" aria-hidden="true" />;
-  }
-
-  return (
-    <span className="network-avatar fallback" aria-hidden="true">
-      {network.initials}
-    </span>
   );
 }

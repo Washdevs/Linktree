@@ -67,6 +67,7 @@ coverage/
 # Docker and local runtime overrides
 docker-compose.override.yml
 certbot/
+data/
 
 # Misc
 *.local

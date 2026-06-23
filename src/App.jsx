@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Eye, Settings2 } from 'lucide-react';
 import LinkEditor from './components/LinkEditor.jsx';
 import LinkList from './components/LinkList.jsx';
-import ProfilePreview from './components/ProfilePreview.jsx';
+import PublicLinkTree from './components/PublicLinkTree.jsx';
 import ProfileSettings from './components/ProfileSettings.jsx';
 import { createDefaultProfile } from './data/defaultProfile.js';
 import { createLinkPayload } from './networks/networkRules.js';
@@ -20,15 +21,66 @@ function makeId() {
   return `link-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getViewMode() {
+  const params = new URLSearchParams(window.location.search);
+  const explicitView = params.get('view');
+
+  if (explicitView === 'public') {
+    return 'public';
+  }
+
+  if (explicitView === 'owner') {
+    return 'owner';
+  }
+
+  if (window.location.pathname.startsWith('/public')) {
+    return 'public';
+  }
+
+  if (['3001', '5174', '8081'].includes(window.location.port)) {
+    return 'public';
+  }
+
+  return 'owner';
+}
+
 export default function App() {
-  const [profile, setProfile] = useState(() => loadProfile(createDefaultProfile()));
+  const [profile, setProfile] = useState(createDefaultProfile);
+  const [isReady, setIsReady] = useState(false);
   const [linkForm, setLinkForm] = useState(emptyLinkForm);
   const [editingId, setEditingId] = useState(null);
   const [formError, setFormError] = useState('');
+  const viewMode = useMemo(getViewMode, []);
+  const isOwner = viewMode === 'owner';
 
   useEffect(() => {
-    saveProfile(profile);
-  }, [profile]);
+    let isMounted = true;
+
+    loadProfile(createDefaultProfile()).then((loadedProfile) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setProfile(loadedProfile);
+      setIsReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isReady || !isOwner) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      saveProfile(profile);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isOwner, isReady, profile]);
 
   function updateProfileField(field, value) {
     setProfile((current) => ({
@@ -38,8 +90,7 @@ export default function App() {
   }
 
   function resetVisual(field) {
-    const defaults = createDefaultProfile();
-    updateProfileField(field, defaults[field]);
+    updateProfileField(field, '');
   }
 
   function submitLink(event) {
@@ -121,16 +172,32 @@ export default function App() {
     });
   }
 
-  const shellStyle = {
-    '--background-image': `url("${profile.backgroundUrl}")`,
-  };
+  if (!isReady) {
+    return <div className="loading-screen">Carregando perfil...</div>;
+  }
+
+  if (!isOwner) {
+    return <PublicLinkTree profile={profile} />;
+  }
 
   return (
-    <main className="app-shell" style={shellStyle}>
-      <section className="workspace" aria-label="Linktree editor">
-        <ProfilePreview profile={profile} />
+    <main className="owner-shell">
+      <section className="owner-header">
+        <div>
+          <span className="eyebrow">
+            <Settings2 size={15} />
+            Painel do criador
+          </span>
+          <h1>Monte sua arvore de links</h1>
+        </div>
+        <a className="public-port-link" href="http://localhost:8081" target="_blank" rel="noreferrer">
+          <Eye size={18} />
+          Ver porta publica
+        </a>
+      </section>
 
-        <section className="editor" aria-label="Profile controls">
+      <section className="owner-grid" aria-label="Editor de links">
+        <section className="owner-panel-stack">
           <ProfileSettings
             profile={profile}
             onChange={updateProfileField}
@@ -154,6 +221,10 @@ export default function App() {
             onRemove={removeLink}
           />
         </section>
+
+        <aside className="owner-preview" aria-label="Preview publico">
+          <PublicLinkTree profile={profile} isPreview />
+        </aside>
       </section>
     </main>
   );
